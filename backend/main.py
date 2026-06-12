@@ -4,8 +4,12 @@ FleetGuard — Aplicação FastAPI principal.
 Define todas as rotas da API e inicializa o servidor.
 """
 
+import os
+from pathlib import Path
+
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from database import engine, get_db, Base
@@ -240,6 +244,31 @@ def health_check():
 # ═══════════════════════════════════════════════════════════════════════════════
 # Funções auxiliares
 # ═══════════════════════════════════════════════════════════════════════════════
+
+FRONTEND_DIST = Path(
+    os.getenv("FRONTEND_DIST", Path(__file__).resolve().parents[1] / "frontend" / "out")
+)
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+def serve_frontend(full_path: str):
+    """Serve o frontend exportado pelo Next.js no mesmo dominio da API."""
+    if not FRONTEND_DIST.exists():
+        raise HTTPException(status_code=404, detail="Frontend nao encontrado.")
+
+    frontend_root = FRONTEND_DIST.resolve()
+    requested_path = (frontend_root / full_path).resolve()
+    if requested_path.is_file() and (
+        requested_path == frontend_root or frontend_root in requested_path.parents
+    ):
+        return FileResponse(requested_path)
+
+    index_path = frontend_root / "index.html"
+    if index_path.exists():
+        return FileResponse(index_path)
+
+    raise HTTPException(status_code=404, detail="Frontend nao encontrado.")
+
 
 def _serialize_maintenance(m) -> dict:
     """Serializa uma manutenção com datas formatadas."""

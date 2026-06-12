@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: projeto-final-clayton-codex
+    runtime: docker
+    plan: free
+    repo: https://github.com/httpsleonardo-beep/projeto-final-clayton-codex
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health

@@ -1,8 +1,18 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+function getApiBaseUrl() {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL;
+  }
+
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://127.0.0.1:8000';
+  }
+
+  return '';
+}
 
 async function request(endpoint, options = {}) {
   try {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const url = `${getApiBaseUrl()}${endpoint}`;
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
